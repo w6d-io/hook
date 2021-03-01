@@ -1,5 +1,7 @@
 # Hook
 
+[![codecov](https://codecov.io/gh/w6d-io/hook/branch/main/graph/badge.svg?token=HL9LOYYCWI)](https://codecov.io/gh/w6d-io/hook)
+
 It is a package that send in one way term any payload to one or more targets.
 It works by subscription and scope.
 
