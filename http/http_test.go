@@ -46,5 +46,21 @@ var _ = Describe("HTTP", func() {
             Ω(err).ToNot(Succeed())
             Ω(err.Error()).To(ContainSubstring("All attempts fail"))
         })
+        It("test timeout", func() {
+            h := http.HTTP{}
+            URL, err := url.Parse("http://localhost:1234?timeout=120")
+            Ω(err).To(Succeed())
+            err = h.Send("message", URL)
+            Ω(err).ToNot(Succeed())
+            Ω(err.Error()).To(ContainSubstring("All attempts fail"))
+        })
+        It("test bad timeout", func() {
+            h := http.HTTP{}
+            URL, err := url.Parse("http://localhost:1234?timeout=s0")
+            Ω(err).To(Succeed())
+            err = h.Send("message", URL)
+            Ω(err).ToNot(Succeed())
+            Ω(err.Error()).To(ContainSubstring("invalid syntax"))
+        })
     })
 })
