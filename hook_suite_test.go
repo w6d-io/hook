@@ -17,61 +17,65 @@ Created on 08/02/2021
 package hook_test
 
 import (
-    "errors"
-    "github.com/w6d-io/hook"
-    "net/url"
-    "testing"
+	"errors"
+	"net/url"
+	"testing"
 
-    "go.uber.org/zap/zapcore"
-    "sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"github.com/w6d-io/hook"
 
-    zapraw "go.uber.org/zap"
-    ctrl "sigs.k8s.io/controller-runtime"
+	"go.uber.org/zap/zapcore"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-    . "github.com/onsi/ginkgo"
-    . "github.com/onsi/gomega"
+	zapraw "go.uber.org/zap"
+	ctrl "sigs.k8s.io/controller-runtime"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 func Test(t *testing.T) {
-    RegisterFailHandler(Fail)
-    RunSpecs(t, " Suite")
+	RegisterFailHandler(Fail)
+	RunSpecs(t, " Suite")
 }
 
 var _ = BeforeSuite(func() {
-    encoder := zapcore.EncoderConfig{
-        // Keys can be anything except the empty string.
-        TimeKey:        "T",
-        LevelKey:       "L",
-        NameKey:        "N",
-        CallerKey:      "C",
-        MessageKey:     "M",
-        StacktraceKey:  "S",
-        LineEnding:     zapcore.DefaultLineEnding,
-        EncodeLevel:    zapcore.CapitalLevelEncoder,
-        EncodeTime:     zapcore.ISO8601TimeEncoder,
-        EncodeDuration: zapcore.StringDurationEncoder,
-        EncodeCaller:   zapcore.FullCallerEncoder,
-    }
-    opts := zap.Options{
-        Encoder:         zapcore.NewConsoleEncoder(encoder),
-        Development:     true,
-        StacktraceLevel: zapcore.PanicLevel,
-    }
-    ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts), zap.RawZapOpts(zapraw.AddCaller())))
+	encoder := zapcore.EncoderConfig{
+		// Keys can be anything except the empty string.
+		TimeKey:        "T",
+		LevelKey:       "L",
+		NameKey:        "N",
+		CallerKey:      "C",
+		MessageKey:     "M",
+		StacktraceKey:  "S",
+		LineEnding:     zapcore.DefaultLineEnding,
+		EncodeLevel:    zapcore.CapitalLevelEncoder,
+		EncodeTime:     zapcore.ISO8601TimeEncoder,
+		EncodeDuration: zapcore.StringDurationEncoder,
+		EncodeCaller:   zapcore.FullCallerEncoder,
+	}
+	opts := zap.Options{
+		Encoder:         zapcore.NewConsoleEncoder(encoder),
+		Development:     true,
+		StacktraceLevel: zapcore.PanicLevel,
+	}
+	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts), zap.RawZapOpts(zapraw.AddCaller())))
 }, 60)
 
 var _ = AfterSuite(func() {
-    hook.CleanSubscriber()
+	hook.CleanSubscriber()
 })
 
-type TestAllOk struct {}
-func (t *TestAllOk) Send(_ interface{}, _ *url.URL) error {return nil}
-func (t *TestAllOk) Validate(_ *url.URL) error                      {return nil}
+type TestAllOk struct{}
 
-type TestSendFail struct {}
-func (t *TestSendFail) Send(_ interface{}, _ *url.URL) error {return errors.New("send failed")}
-func (t *TestSendFail) Validate(_ *url.URL) error                      {return nil}
+func (t *TestAllOk) Send(_ interface{}, _ *url.URL) error { return nil }
+func (t *TestAllOk) Validate(_ *url.URL) error            { return nil }
 
-type TestValidateFail struct {}
-func (t *TestValidateFail) Send(_ interface{}, _ *url.URL) error {return nil}
-func (t *TestValidateFail) Validate(_ *url.URL) error                      {return errors.New("validate failed")}
+type TestSendFail struct{}
+
+func (t *TestSendFail) Send(_ interface{}, _ *url.URL) error { return errors.New("send failed") }
+func (t *TestSendFail) Validate(_ *url.URL) error            { return nil }
+
+type TestValidateFail struct{}
+
+func (t *TestValidateFail) Send(_ interface{}, _ *url.URL) error { return nil }
+func (t *TestValidateFail) Validate(_ *url.URL) error            { return errors.New("validate failed") }

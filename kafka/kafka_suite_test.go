@@ -17,13 +17,13 @@ Created on 08/02/2021
 package kafka_test
 
 import (
-    "testing"
+	"testing"
 
-    . "github.com/onsi/ginkgo"
-    . "github.com/onsi/gomega"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 func TestHook(t *testing.T) {
-    RegisterFailHandler(Fail)
-    RunSpecs(t, "Kafka Suite")
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Kafka Suite")
 }

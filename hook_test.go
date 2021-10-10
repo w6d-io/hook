@@ -17,85 +17,86 @@ Created on 25/02/2021
 package hook_test
 
 import (
-    . "github.com/onsi/ginkgo"
-    . "github.com/onsi/gomega"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 
-    "github.com/w6d-io/hook"
-    "k8s.io/klog/klogr"
+	"k8s.io/klog/klogr"
+
+	"github.com/w6d-io/hook"
 )
 
 var _ = Describe("Hook", func() {
-    When("provider works", func() {
-        BeforeEach(func() {
-            hook.AddProvider("http", &TestAllOk{})
-        })
-        Context("add suppliers", func() {
-            It("succeed for http", func() {
-                err := hook.Subscribe("http://localhost:8080", "*")
-                Expect(err).To(Succeed())
-            })
-            It("does not support this provider", func() {
-                err := hook.Subscribe("mongodb://login:password@localhost:27017", "end")
-                Expect(err).ToNot(Succeed())
-                Expect(err.Error()).To(ContainSubstring("not supported"))
-            })
-            It("URL is malformed", func() {
-                err := hook.Subscribe("test://{}", "begin")
-                Expect(err).ToNot(Succeed())
-                Expect(err.Error()).To(ContainSubstring("invalid character"))
-            })
-            It("validation failed", func() {
-                hook.AddProvider("https", &TestValidateFail{})
-                err := hook.Subscribe("https://localhost", "*")
-                Expect(err).ToNot(Succeed())
-                Expect(err.Error()).To(Equal("validate failed"))
-            })
-        })
-        Context("send a payload", func() {
-            It("succeed to send", func() {
-                log := klogr.New()
-                Expect(hook.Send("message", log, "*")).To(Succeed())
-            })
-            It("succeed to DoSend", func() {
-                log := klogr.New()
-                Expect(hook.DoSend("message", log, "*")).To(Succeed())
-            })
-        })
-    })
-    When("provider Failed", func() {
-        BeforeEach(func() {
-            hook.AddProvider("http", &TestSendFail{})
-        })
-        Context("send payload", func() {
-            It("with Send", func() {
-                log := klogr.New()
-                err := hook.Send("message", log, "*")
-                Expect(err).To(Succeed())
-            })
-            It("with bad scope", func() {
-                log := klogr.New()
-                err := hook.Subscribe("http://localhost", "begin")
-                Expect(err).To(Succeed())
-                err = hook.Send("message", log, "test")
-                Expect(err).To(Succeed())
-            })
-            It("regex failed", func() {
-                log := klogr.New()
-                err := hook.Subscribe("http://localhost", "[")
-                Expect(err).To(Succeed())
-                err = hook.DoSend("message", log, "test")
-                Expect(err).ToNot(Succeed())
-                Expect(err.Error()).To(Equal("send failed"))
-            })
-            It("with DoSend", func() {
-                log := klogr.New()
-                err := hook.DoSend("message", log, "*")
-                Expect(err).ToNot(Succeed())
-                Expect(err.Error()).To(Equal("send failed"))
-            })
-            It("skip", func() {
+	When("provider works", func() {
+		BeforeEach(func() {
+			hook.AddProvider("http", &TestAllOk{})
+		})
+		Context("add suppliers", func() {
+			It("succeed for http", func() {
+				err := hook.Subscribe("http://localhost:8080", "*")
+				Expect(err).To(Succeed())
+			})
+			It("does not support this provider", func() {
+				err := hook.Subscribe("mongodb://login:password@localhost:27017", "end")
+				Expect(err).ToNot(Succeed())
+				Expect(err.Error()).To(ContainSubstring("not supported"))
+			})
+			It("URL is malformed", func() {
+				err := hook.Subscribe("test://{}", "begin")
+				Expect(err).ToNot(Succeed())
+				Expect(err.Error()).To(ContainSubstring("invalid character"))
+			})
+			It("validation failed", func() {
+				hook.AddProvider("https", &TestValidateFail{})
+				err := hook.Subscribe("https://localhost", "*")
+				Expect(err).ToNot(Succeed())
+				Expect(err.Error()).To(Equal("validate failed"))
+			})
+		})
+		Context("send a payload", func() {
+			It("succeed to send", func() {
+				log := klogr.New()
+				Expect(hook.Send("message", log, "*")).To(Succeed())
+			})
+			It("succeed to DoSend", func() {
+				log := klogr.New()
+				Expect(hook.DoSend("message", log, "*")).To(Succeed())
+			})
+		})
+	})
+	When("provider Failed", func() {
+		BeforeEach(func() {
+			hook.AddProvider("http", &TestSendFail{})
+		})
+		Context("send payload", func() {
+			It("with Send", func() {
+				log := klogr.New()
+				err := hook.Send("message", log, "*")
+				Expect(err).To(Succeed())
+			})
+			It("with bad scope", func() {
+				log := klogr.New()
+				err := hook.Subscribe("http://localhost", "begin")
+				Expect(err).To(Succeed())
+				err = hook.Send("message", log, "test")
+				Expect(err).To(Succeed())
+			})
+			It("regex failed", func() {
+				log := klogr.New()
+				err := hook.Subscribe("http://localhost", "[")
+				Expect(err).To(Succeed())
+				err = hook.DoSend("message", log, "test")
+				Expect(err).ToNot(Succeed())
+				Expect(err.Error()).To(Equal("send failed"))
+			})
+			It("with DoSend", func() {
+				log := klogr.New()
+				err := hook.DoSend("message", log, "*")
+				Expect(err).ToNot(Succeed())
+				Expect(err.Error()).To(Equal("send failed"))
+			})
+			It("skip", func() {
 
-            })
-        })
-    })
+			})
+		})
+	})
 })

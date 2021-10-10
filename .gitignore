@@ -1,0 +1,6 @@
+# folder
+/bin
+.idea/
+
+# coverage
+*.out

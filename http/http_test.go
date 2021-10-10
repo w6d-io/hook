@@ -17,50 +17,50 @@ Created on 26/02/2021
 package http_test
 
 import (
-    "net/url"
-    //"os"
+	"net/url"
+	//"os"
 
-    . "github.com/onsi/ginkgo"
-    //. "github.com/onsi/ginkgo/tmp"
-    . "github.com/onsi/gomega"
+	. "github.com/onsi/ginkgo"
+	//. "github.com/onsi/ginkgo/tmp"
+	. "github.com/onsi/gomega"
 
-    //"github.com/onsi/gomega/ghttp"
-    "github.com/w6d-io/hook/http"
+	//"github.com/onsi/gomega/ghttp"
+	"github.com/w6d-io/hook/http"
 )
 
 var _ = Describe("HTTP", func() {
-    Context("Validate", func() {
-        It("nothing to do", func() {
-            h := &http.HTTP{}
-            URL, err := url.Parse("http://localhost:1234")
-            err = h.Validate(URL)
-            Expect(err).To(Succeed())
-        })
-    })
-    Context("Send", func() {
-        It("all attempts failed", func() {
-            h := http.HTTP{}
-            URL, err := url.Parse("http://localhost:1234")
-            Ω(err).To(Succeed())
-            err = h.Send("message", URL)
-            Ω(err).ToNot(Succeed())
-            Ω(err.Error()).To(ContainSubstring("All attempts fail"))
-        })
-        It("test timeout", func() {
-            h := http.HTTP{}
-            URL, err := url.Parse("http://localhost:1234?timeout=120")
-            Ω(err).To(Succeed())
-            err = h.Send("message", URL)
-            Ω(err).ToNot(Succeed())
-            Ω(err.Error()).To(ContainSubstring("All attempts fail"))
-        })
-        It("test bad timeout", func() {
-            h := http.HTTP{}
-            URL, err := url.Parse("http://localhost:1234?timeout=s0")
-            Ω(err).To(Succeed())
-            err = h.Send("message", URL)
-            Ω(err).ToNot(Succeed())
-            Ω(err.Error()).To(ContainSubstring("invalid syntax"))
-        })
-    })
+	Context("Validate", func() {
+		It("nothing to do", func() {
+			h := &http.HTTP{}
+			URL, err := url.Parse("http://localhost:1234")
+			err = h.Validate(URL)
+			Expect(err).To(Succeed())
+		})
+	})
+	Context("Send", func() {
+		It("all attempts failed", func() {
+			h := http.HTTP{}
+			URL, err := url.Parse("http://localhost:1234")
+			Ω(err).To(Succeed())
+			err = h.Send("message", URL)
+			Ω(err).ToNot(Succeed())
+			Ω(err.Error()).To(ContainSubstring("All attempts fail"))
+		})
+		It("test timeout", func() {
+			h := http.HTTP{}
+			URL, err := url.Parse("http://localhost:1234?timeout=120")
+			Ω(err).To(Succeed())
+			err = h.Send("message", URL)
+			Ω(err).ToNot(Succeed())
+			Ω(err.Error()).To(ContainSubstring("All attempts fail"))
+		})
+		It("test bad timeout", func() {
+			h := http.HTTP{}
+			URL, err := url.Parse("http://localhost:1234?timeout=s0")
+			Ω(err).To(Succeed())
+			err = h.Send("message", URL)
+			Ω(err).ToNot(Succeed())
+			Ω(err.Error()).To(ContainSubstring("invalid syntax"))
+		})
+	})
 })

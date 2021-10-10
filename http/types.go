@@ -19,10 +19,10 @@ package http
 import "k8s.io/klog/klogr"
 
 type HTTP struct {
-    Username string
-    Password string
+	Username string
+	Password string
 }
 
 var (
-    logger = klogr.New()
+	logger = klogr.New()
 )

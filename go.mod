@@ -1,10 +1,11 @@
 module github.com/w6d-io/hook
 
-go 1.15
+go 1.16
 
 require (
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/confluentinc/confluent-kafka-go v1.5.2
+	github.com/git-chglog/git-chglog v0.15.0 // indirect
 	github.com/go-logr/logr v0.4.0
 	github.com/onsi/ginkgo v1.16.4
 	github.com/onsi/gomega v1.15.0

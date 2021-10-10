@@ -17,8 +17,9 @@ Created on 07/02/2021
 package hook
 
 import (
-	"k8s.io/klog/klogr"
 	"net/url"
+
+	"k8s.io/klog/klogr"
 )
 
 type Hook struct{}

@@ -17,66 +17,66 @@ Created on 16/02/2021
 package kafka
 
 import (
-    "encoding/json"
-    "fmt"
-    "time"
+	"encoding/json"
+	"fmt"
+	"time"
 
-    kgo "github.com/confluentinc/confluent-kafka-go/kafka"
+	kgo "github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
 // Producer Creation of an emitter and send any type of value to its topic in kafka
 func (k *Kafka) Producer(messageKey string, messageValue interface{}, opts ...Option) error {
-    log := logger.WithName("Producer")
+	log := logger.WithName("Producer")
 
-    options := NewOptions(opts...)
+	options := NewOptions(opts...)
 
-    producerCM := &kgo.ConfigMap{
-        "bootstrap.servers": k.BootstrapServer,
-    }
-    if options.AuthKafka {
-        _ = producerCM.SetKey("sasl.mechanisms", options.Mechanisms)
-        _ = producerCM.SetKey("security.protocol", options.Protocol)
-        _ = producerCM.SetKey("bootstrap.servers", k.BootstrapServer)
-        _ = producerCM.SetKey("sasl.username", k.Username)
-        _ = producerCM.SetKey("sasl.password", k.Password)
-    }
+	producerCM := &kgo.ConfigMap{
+		"bootstrap.servers": k.BootstrapServer,
+	}
+	if options.AuthKafka {
+		_ = producerCM.SetKey("sasl.mechanisms", options.Mechanisms)
+		_ = producerCM.SetKey("security.protocol", options.Protocol)
+		_ = producerCM.SetKey("bootstrap.servers", k.BootstrapServer)
+		_ = producerCM.SetKey("sasl.username", k.Username)
+		_ = producerCM.SetKey("sasl.password", k.Password)
+	}
 
-    p, err := kgo.NewProducer(producerCM)
-    if err != nil {
-        return fmt.Errorf("failed to create producer: %s", err)
-    }
-    defer p.Close()
-    go func() {
-        for e := range p.Events() {
-            switch ev := e.(type) {
-            case *kgo.Message:
-                if ev.TopicPartition.Error != nil {
-                    log.Error(ev.TopicPartition.Error, "Failed to deliver",
-                        "stacktrace", ev.TopicPartition)
-                } else {
-                    log.Info("Successfully produced record",
-                        "topic", *ev.TopicPartition.Topic,
-                        "partition", ev.TopicPartition.Partition,
-                        "offset", ev.TopicPartition.Offset)
-                }
-            }
-        }
-    }()
+	p, err := kgo.NewProducer(producerCM)
+	if err != nil {
+		return fmt.Errorf("failed to create producer: %s", err)
+	}
+	defer p.Close()
+	go func() {
+		for e := range p.Events() {
+			switch ev := e.(type) {
+			case *kgo.Message:
+				if ev.TopicPartition.Error != nil {
+					log.Error(ev.TopicPartition.Error, "Failed to deliver",
+						"stacktrace", ev.TopicPartition)
+				} else {
+					log.Info("Successfully produced record",
+						"topic", *ev.TopicPartition.Topic,
+						"partition", ev.TopicPartition.Partition,
+						"offset", ev.TopicPartition.Offset)
+				}
+			}
+		}
+	}()
 
-    message, err := json.Marshal(&messageValue)
-    if err != nil {
-        log.Error(err, "marshal failed")
-        return err
-    }
-    if err := p.Produce(&kgo.Message{
-        TopicPartition: kgo.TopicPartition{Topic: &k.Topic, Partition: kgo.PartitionAny},
-        Key:            []byte(messageKey),
-        Value:          message,
-        Timestamp:      time.Now(),
-    }, nil); err != nil {
-        log.Error(err, "produce failed")
-        return err
-    }
-    p.Flush(int(options.WriteTimeout / time.Millisecond))
-    return nil
+	message, err := json.Marshal(&messageValue)
+	if err != nil {
+		log.Error(err, "marshal failed")
+		return err
+	}
+	if err := p.Produce(&kgo.Message{
+		TopicPartition: kgo.TopicPartition{Topic: &k.Topic, Partition: kgo.PartitionAny},
+		Key:            []byte(messageKey),
+		Value:          message,
+		Timestamp:      time.Now(),
+	}, nil); err != nil {
+		log.Error(err, "produce failed")
+		return err
+	}
+	p.Flush(int(options.WriteTimeout / time.Millisecond))
+	return nil
 }
