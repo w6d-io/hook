@@ -17,9 +17,6 @@ Created on 25/02/2021
 package hook_test
 
 import (
-    "errors"
-    "net/url"
-
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
 
@@ -27,27 +24,12 @@ import (
     "k8s.io/klog/klogr"
 )
 
-type TestAllOk struct {}
-func (t *TestAllOk) Send(_ interface{}, _ *url.URL) error {return nil}
-func (t *TestAllOk) Validate(_ *url.URL) error                      {return nil}
-
-type TestSendFail struct {}
-func (t *TestSendFail) Send(_ interface{}, _ *url.URL) error {return errors.New("send failed")}
-func (t *TestSendFail) Validate(_ *url.URL) error                      {return nil}
-
-type TestValidateFail struct {}
-func (t *TestValidateFail) Send(_ interface{}, _ *url.URL) error {return nil}
-func (t *TestValidateFail) Validate(_ *url.URL) error                      {return errors.New("validate failed")}
-
 var _ = Describe("Hook", func() {
     When("provider works", func() {
         BeforeEach(func() {
             hook.AddProvider("http", &TestAllOk{})
         })
         Context("add suppliers", func() {
-            AfterEach(func() {
-                //hook.DelProvider("http")
-            })
             It("succeed for http", func() {
                 err := hook.Subscribe("http://localhost:8080", "*")
                 Expect(err).To(Succeed())
@@ -62,7 +44,7 @@ var _ = Describe("Hook", func() {
                 Expect(err).ToNot(Succeed())
                 Expect(err.Error()).To(ContainSubstring("invalid character"))
             })
-            It("validate failed", func() {
+            It("validation failed", func() {
                 hook.AddProvider("https", &TestValidateFail{})
                 err := hook.Subscribe("https://localhost", "*")
                 Expect(err).ToNot(Succeed())

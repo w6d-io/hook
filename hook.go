@@ -45,7 +45,7 @@ func Send(payload interface{}, logger logr.Logger, scope string) error {
     return nil
 }
 
-// Send loop into all the subscribers url. for each it get the function by the scheme and run the method/function associated
+// DoSend loops into all the subscribers url. for each it get the function by the scheme and run the method/function associated
 func DoSend(payload interface{}, logger logr.Logger, scope string) error {
     log := logger.WithName("HookSend")
     errc := make(chan error, len(subscribers))
@@ -115,6 +115,11 @@ func Subscribe(URLRaw, scope string) error {
     }
     subscribers = append(subscribers, w)
     return nil
+}
+
+// CleanSubscriber cleans the list of subscriber
+func CleanSubscriber() {
+    subscribers = []subscriber{}
 }
 
 func isInScope(s subscriber, scope string) bool {
