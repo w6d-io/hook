@@ -11,11 +11,11 @@ It works by subscription and scope.
 package main
 
 import (
-	"context"
+    "context"
     "os"
 
     "github.com/w6d-io/hook"
- 	"github.com/w6d-io/x/logx"
+    "github.com/w6d-io/x/logx"
 )
 
 type payload struct {
@@ -25,7 +25,7 @@ type payload struct {
 
 func main() {
     ctx := context.Background()
-	log := logx.WithName(ctx, "Main")
+    log := logx.WithName(ctx, "Main")
     URL := "http://localhost:8080/test"
     // add a target for the payload for all scope
     if err := hook.Subscribe(URL, "test"); err != nil {
