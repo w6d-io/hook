@@ -17,7 +17,9 @@ Created on 26/02/2021
 package http_test
 
 import (
+	"context"
 	"net/url"
+
 	//"os"
 
 	. "github.com/onsi/ginkgo"
@@ -42,7 +44,7 @@ var _ = Describe("HTTP", func() {
 			h := http.HTTP{}
 			URL, err := url.Parse("http://localhost:1234")
 			Ω(err).To(Succeed())
-			err = h.Send("message", URL)
+			err = h.Send(context.Background(), "message", URL)
 			Ω(err).ToNot(Succeed())
 			Ω(err.Error()).To(ContainSubstring("All attempts fail"))
 		})
@@ -50,7 +52,7 @@ var _ = Describe("HTTP", func() {
 			h := http.HTTP{}
 			URL, err := url.Parse("http://localhost:1234?timeout=120")
 			Ω(err).To(Succeed())
-			err = h.Send("message", URL)
+			err = h.Send(context.Background(), "message", URL)
 			Ω(err).ToNot(Succeed())
 			Ω(err.Error()).To(ContainSubstring("All attempts fail"))
 		})
@@ -58,7 +60,7 @@ var _ = Describe("HTTP", func() {
 			h := http.HTTP{}
 			URL, err := url.Parse("http://localhost:1234?timeout=s0")
 			Ω(err).To(Succeed())
-			err = h.Send("message", URL)
+			err = h.Send(context.Background(), "message", URL)
 			Ω(err).ToNot(Succeed())
 			Ω(err.Error()).To(ContainSubstring("invalid syntax"))
 		})

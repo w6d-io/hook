@@ -17,10 +17,10 @@ Created on 25/02/2021
 package hook_test
 
 import (
+	"context"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
-	"k8s.io/klog/klogr"
 
 	"github.com/w6d-io/hook"
 )
@@ -54,12 +54,10 @@ var _ = Describe("Hook", func() {
 		})
 		Context("send a payload", func() {
 			It("succeed to send", func() {
-				log := klogr.New()
-				Expect(hook.Send("message", log, "*")).To(Succeed())
+				Expect(hook.Send(context.Background(), "message", "*")).To(Succeed())
 			})
 			It("succeed to DoSend", func() {
-				log := klogr.New()
-				Expect(hook.DoSend("message", log, "*")).To(Succeed())
+				Expect(hook.DoSend(context.Background(), "message", "*")).To(Succeed())
 			})
 		})
 	})
@@ -69,28 +67,24 @@ var _ = Describe("Hook", func() {
 		})
 		Context("send payload", func() {
 			It("with Send", func() {
-				log := klogr.New()
-				err := hook.Send("message", log, "*")
+				err := hook.Send(context.Background(), "message", "*")
 				Expect(err).To(Succeed())
 			})
 			It("with bad scope", func() {
-				log := klogr.New()
 				err := hook.Subscribe("http://localhost", "begin")
 				Expect(err).To(Succeed())
-				err = hook.Send("message", log, "test")
+				err = hook.Send(context.Background(), "message", "test")
 				Expect(err).To(Succeed())
 			})
 			It("regex failed", func() {
-				log := klogr.New()
 				err := hook.Subscribe("http://localhost", "[")
 				Expect(err).To(Succeed())
-				err = hook.DoSend("message", log, "test")
+				err = hook.DoSend(context.Background(), "message", "test")
 				Expect(err).ToNot(Succeed())
 				Expect(err.Error()).To(Equal("send failed"))
 			})
 			It("with DoSend", func() {
-				log := klogr.New()
-				err := hook.DoSend("message", log, "*")
+				err := hook.DoSend(context.Background(), "message", "*")
 				Expect(err).ToNot(Succeed())
 				Expect(err.Error()).To(Equal("send failed"))
 			})

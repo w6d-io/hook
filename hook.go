@@ -18,6 +18,7 @@ Created on 07/02/2021
 package hook
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 	"regexp"
@@ -25,7 +26,7 @@ import (
 	"github.com/w6d-io/hook/http"
 	"github.com/w6d-io/hook/kafka"
 
-	"github.com/go-logr/logr"
+	"github.com/w6d-io/x/logx"
 )
 
 func init() {
@@ -34,20 +35,21 @@ func init() {
 	AddProvider("https", &http.HTTP{})
 }
 
-func Send(payload interface{}, logger logr.Logger, scope string) error {
-	logger.V(1).Info("to send", "payload", payload)
-	go func(payload interface{}, logger logr.Logger) {
-		if err := DoSend(payload, logger, scope); err != nil {
-			logger.Error(err, "DoSend")
+func Send(ctx context.Context, payload interface{}, scope string) error {
+	log := logx.WithName(ctx, "Hook.Send")
+	log.V(1).Info("to send", "payload", payload)
+	go func(ctx context.Context, payload interface{}) {
+		if err := DoSend(ctx, payload, scope); err != nil {
+			log.Error(err, "DoSend")
 			return
 		}
-	}(payload, logger)
+	}(ctx, payload)
 	return nil
 }
 
 // DoSend loops into all the subscribers url. for each it get the function by the scheme and run the method/function associated
-func DoSend(payload interface{}, logger logr.Logger, scope string) error {
-	log := logger.WithName("HookSend")
+func DoSend(ctx context.Context, payload interface{}, scope string) error {
+	log := logx.WithName(ctx, "Hook.DoSend")
 	errc := make(chan error, len(subscribers))
 	quit := make(chan struct{})
 	defer close(quit)
@@ -62,7 +64,7 @@ func DoSend(payload interface{}, logger logr.Logger, scope string) error {
 			f := suppliers[URL.Scheme]
 			logg := log.WithValues("url", URL)
 			select {
-			case errc <- f.Send(payload, URL):
+			case errc <- f.Send(ctx, payload, URL):
 				logg.Info("sent")
 			case <-quit:
 				logg.Info("quit")
@@ -92,7 +94,8 @@ func AddProvider(name string, i Interface) {
 // Subscribe recorder the suppliers and its scope in subscribers
 func Subscribe(URLRaw, scope string) error {
 
-	log := logger.WithName("Subscribe")
+	log := logx.WithName(context.TODO(), "Hook.Subscribe")
+
 	URL, err := url.Parse(URLRaw)
 	if err != nil {
 		log.Error(err, "URL parsing", "url", URLRaw)
@@ -123,13 +126,16 @@ func CleanSubscriber() {
 }
 
 func isInScope(s subscriber, scope string) bool {
+
+	log := logx.WithName(context.TODO(), "Hook.isInScope")
+
 	prefix := ""
 	if s.Scope == "*" {
 		prefix = "."
 	}
 	r, err := regexp.Compile(prefix + s.Scope)
 	if err != nil {
-		logger.Error(err, "Match failed")
+		log.Error(err, "Match failed")
 		return false
 	}
 	return r.MatchString(scope)
