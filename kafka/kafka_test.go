@@ -54,6 +54,20 @@ var _ = Describe("Kafka", func() {
 		})
 	})
 	Context("Send", func() {
+		It("wrong option", func() {
+			k := kafka.Kafka{}
+			url, _ := url.Parse("kafka://user:pass@localhost:9092?topic=TEST&protocol=Unknown")
+			err := k.Validate(url)
+			Expect(err).To(Succeed())
+			err = k.Send(context.Background(), "test", url)
+			Expect(err).NotTo(Succeed())
+		})
+		It("wrong payload", func() {
+			k := &kafka.Kafka{}
+			url, _ := url.Parse("kafka://localhost:9092?topic=TEST&messagekey=TEST_KEY&protocol=TCP&mechanisms=PLAIN")
+			err := k.Send(context.Background(), make(chan int), url)
+			Expect(err).NotTo(Succeed())
+		})
 		It("timeout but succeed", func() {
 			k := &kafka.Kafka{}
 			url, _ := url.Parse("kafka://localhost:9092?topic=TEST&messagekey=TEST_KEY&protocol=TCP&mechanisms=PLAIN")
