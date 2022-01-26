@@ -1,6 +1,6 @@
 
-<a name="v0.1.5"></a>
-## [v0.1.5](https://gitlab.w6d.io/w6d/projectmgt/-/compare/v0.1.4...v0.1.5) (2022-01-26)
+<a name="v0.2.0"></a>
+## [v0.2.0](https://gitlab.w6d.io/w6d/projectmgt/-/compare/v0.1.4...v0.2.0) (2022-01-26)
 
 ### Chore
 
