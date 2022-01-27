@@ -11,10 +11,11 @@ It works by subscription and scope.
 package main
 
 import (
+    "context"
     "os"
 
     "github.com/w6d-io/hook"
-    "k8s.io/klog/klogr"
+    "github.com/w6d-io/x/logx"
 )
 
 type payload struct {
@@ -23,7 +24,8 @@ type payload struct {
 }
 
 func main() {
-    log := klogr.New()
+    ctx := context.Background()
+    log := logx.WithName(ctx, "Main")
     URL := "http://localhost:8080/test"
     // add a target for the payload for all scope
     if err := hook.Subscribe(URL, "test"); err != nil {
@@ -42,13 +44,13 @@ func main() {
         Kind: "test",
     }
     // Send payload with test as scope the payload is send to http and kafka
-    if err := hook.Send(p, log, "test"); err != nil {
+    if err := hook.Send(ctx, p, "test"); err != nil {
         log.Error(err, "Send failed")
         os.Exit(1)
     }
 
     // Send payload with failed as scope. Only sends to kafka due to the scope
-    if err := hook.Send(p, log, "failed"); err != nil {
+    if err := hook.Send(ctx, p, "failed"); err != nil {
         log.Error(err, "Send failed")
         os.Exit(1)
     }

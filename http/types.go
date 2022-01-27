@@ -16,13 +16,7 @@ Created on 26/02/2021
 */
 package http
 
-import "k8s.io/klog/klogr"
-
 type HTTP struct {
 	Username string
 	Password string
 }
-
-var (
-	logger = klogr.New()
-)

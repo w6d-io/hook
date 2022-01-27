@@ -17,8 +17,8 @@ Created on 26/02/2021
 package kafka_test
 
 import (
+	"context"
 	"net/url"
-	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -53,61 +53,25 @@ var _ = Describe("Kafka", func() {
 			Expect(err).To(Succeed())
 		})
 	})
-	Context("options", func() {
-		It("bad configuration", func() {
-			var opts []kafka.Option
-			opts = append(opts, kafka.Protocol("SASL_SSL"))
-			opts = append(opts, kafka.Mechanisms("PLAIN"))
-			opts = append(opts, kafka.Async(false))
-			opts = append(opts, kafka.WriteTimeout(1*time.Second))
-			opts = append(opts, kafka.MaxWait(1*time.Second))
-			opts = append(opts, kafka.StatInterval(3*time.Second))
-			opts = append(opts, kafka.NumPartitions(10))
-			opts = append(opts, kafka.ReplicationFactor(3))
-			opts = append(opts, kafka.AuthKafka(true))
-			opts = append(opts, kafka.FullStats(false))
-			opts = append(opts, kafka.Debugs([]string{"deep"}))
-			opts = append(opts, kafka.SessionTimeout(10*time.Millisecond))
-			opts = append(opts, kafka.MaxPollInterval(10*time.Millisecond))
-			opts = append(opts, kafka.GroupInstanceID("test"))
-			opts = append(opts, kafka.ConfigMapKey("test"))
-			_ = kafka.NewOptions(opts...)
-			k := kafka.Kafka{
-				Username:        "test",
-				Password:        "test",
-				BootstrapServer: "localhost:9092",
-			}
-			err := k.Producer("TEST_ID", "message", opts...)
-			Expect(err).ToNot(Succeed())
-			Expect(err.Error()).To(Equal("Local: Invalid argument or configuration"))
-		})
-		It("", func() {
-			var opts []kafka.Option
-			opts = append(opts, kafka.Protocol("SASL_SSL"))
-			opts = append(opts, kafka.Mechanisms("PLAIN"))
-			opts = append(opts, kafka.Async(false))
-			opts = append(opts, kafka.WriteTimeout(1*time.Second))
-			opts = append(opts, kafka.MaxWait(1*time.Second))
-			opts = append(opts, kafka.StatInterval(3*time.Second))
-			opts = append(opts, kafka.AuthKafka(true))
-			opts = append(opts, kafka.SessionTimeout(10*time.Millisecond))
-			opts = append(opts, kafka.MaxPollInterval(10*time.Millisecond))
-			_ = kafka.NewOptions(opts...)
-			k := kafka.Kafka{
-				Topic:           "TEST",
-				Username:        "test",
-				Password:        "test",
-				BootstrapServer: "localhost:9092",
-			}
-			err := k.Producer("TEST_ID", "message", opts...)
-			Expect(err).To(Succeed())
-		})
-	})
 	Context("Send", func() {
+		It("wrong option", func() {
+			k := kafka.Kafka{}
+			url, _ := url.Parse("kafka://user:pass@localhost:9092?topic=TEST&protocol=Unknown")
+			err := k.Validate(url)
+			Expect(err).To(Succeed())
+			err = k.Send(context.Background(), "test", url)
+			Expect(err).NotTo(Succeed())
+		})
+		It("wrong payload", func() {
+			k := &kafka.Kafka{}
+			url, _ := url.Parse("kafka://localhost:9092?topic=TEST&messagekey=TEST_KEY&protocol=TCP&mechanisms=PLAIN")
+			err := k.Send(context.Background(), make(chan int), url)
+			Expect(err).NotTo(Succeed())
+		})
 		It("timeout but succeed", func() {
 			k := &kafka.Kafka{}
 			url, _ := url.Parse("kafka://localhost:9092?topic=TEST&messagekey=TEST_KEY&protocol=TCP&mechanisms=PLAIN")
-			err := k.Send("test", url)
+			err := k.Send(context.Background(), "test", url)
 			Expect(err).To(Succeed())
 		})
 	})

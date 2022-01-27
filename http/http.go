@@ -18,6 +18,7 @@ package http
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -26,10 +27,11 @@ import (
 	"time"
 
 	"github.com/avast/retry-go"
+	"github.com/w6d-io/x/logx"
 )
 
-func (h *HTTP) Send(payload interface{}, URL *url.URL) error {
-	log := logger.WithName("Send").WithValues("URL", URL.Redacted())
+func (h *HTTP) Send(ctx context.Context, payload interface{}, URL *url.URL) error {
+	log := logx.WithName(ctx, "Send").WithValues("URL", URL.Redacted())
 	h.Username = URL.User.Username()
 	h.Password, _ = URL.User.Password()
 	query := URL.Query()

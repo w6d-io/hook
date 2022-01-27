@@ -17,44 +17,9 @@ Created on 16/02/2021
 package kafka
 
 import (
-	"time"
-
-	"k8s.io/klog/klogr"
-)
-
-var (
-	logger = klogr.New()
+	"github.com/w6d-io/x/kafkax"
 )
 
 type Kafka struct {
-	Username        string
-	Password        string
-	BootstrapServer string
-	Topic           string
-}
-
-// Option ...
-type Option func(*Options)
-
-// Options ...
-type Options struct {
-	Protocol          string
-	Mechanisms        string
-	Async             bool
-	SessionTimeout    time.Duration
-	MaxPollInterval   time.Duration
-	WriteTimeout      time.Duration
-	ReadTimeout       time.Duration
-	BatchTimeout      time.Duration
-	MaxWait           time.Duration
-	StatInterval      time.Duration
-	NumPartitions     int
-	ReplicationFactor int
-	MinBytes          int
-	MaxBytes          int
-	AuthKafka         bool
-	FullStats         bool
-	Debugs            []string
-	GroupInstanceID   string
-	ConfigMapKey      string
+	kafkax.Kafka
 }

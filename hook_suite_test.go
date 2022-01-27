@@ -17,6 +17,7 @@ Created on 08/02/2021
 package hook_test
 
 import (
+	"context"
 	"errors"
 	"net/url"
 	"testing"
@@ -67,15 +68,17 @@ var _ = AfterSuite(func() {
 
 type TestAllOk struct{}
 
-func (t *TestAllOk) Send(_ interface{}, _ *url.URL) error { return nil }
-func (t *TestAllOk) Validate(_ *url.URL) error            { return nil }
+func (t *TestAllOk) Send(_ context.Context, _ interface{}, _ *url.URL) error { return nil }
+func (t *TestAllOk) Validate(_ *url.URL) error                               { return nil }
 
 type TestSendFail struct{}
 
-func (t *TestSendFail) Send(_ interface{}, _ *url.URL) error { return errors.New("send failed") }
-func (t *TestSendFail) Validate(_ *url.URL) error            { return nil }
+func (t *TestSendFail) Send(_ context.Context, _ interface{}, _ *url.URL) error {
+	return errors.New("send failed")
+}
+func (t *TestSendFail) Validate(_ *url.URL) error { return nil }
 
 type TestValidateFail struct{}
 
-func (t *TestValidateFail) Send(_ interface{}, _ *url.URL) error { return nil }
-func (t *TestValidateFail) Validate(_ *url.URL) error            { return errors.New("validate failed") }
+func (t *TestValidateFail) Send(_ context.Context, _ interface{}, _ *url.URL) error { return nil }
+func (t *TestValidateFail) Validate(_ *url.URL) error                               { return errors.New("validate failed") }

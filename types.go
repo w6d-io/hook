@@ -17,23 +17,20 @@ Created on 07/02/2021
 package hook
 
 import (
+	"context"
 	"net/url"
-
-	"k8s.io/klog/klogr"
 )
 
 type Hook struct{}
 
 type Interface interface {
-	Send(interface{}, *url.URL) error
+	Send(context.Context, interface{}, *url.URL) error
 	Validate(*url.URL) error
 }
 
 var (
 	suppliers   = make(providers)
 	subscribers []subscriber
-
-	logger = klogr.New()
 )
 
 type providers map[string]Interface

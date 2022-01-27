@@ -1,4 +1,12 @@
 
+<a name="v0.2.0"></a>
+## [v0.2.0](https://gitlab.w6d.io/w6d/projectmgt/-/compare/v0.1.4...v0.2.0) (2022-01-26)
+
+### Chore
+
+* add w6d-io/x support
+
+
 <a name="v0.1.4"></a>
 ## [v0.1.4](https://gitlab.w6d.io/w6d/projectmgt/-/compare/v0.1.3...v0.1.4) (2021-10-10)
 
