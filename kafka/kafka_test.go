@@ -24,6 +24,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/w6d-io/hook/kafka"
+	"github.com/w6d-io/x/kafkax"
 )
 
 var _ = Describe("Kafka", func() {
@@ -33,21 +34,32 @@ var _ = Describe("Kafka", func() {
 		AfterEach(func() {
 		})
 		It("url is nil", func() {
-			k := kafka.Kafka{}
-
+			k := &kafka.Kafka{
+				Producer: &kafkax.Producer{
+					ClientProducerAPI: &kafkax.MockClientProducer{},
+				},
+			}
 			err := k.Validate(nil)
 			Expect(err).ToNot(HaveOccurred())
 			//Expect(err.Error()).To(Equal("ddd"))
 		})
 		It("url is missed mandatory part", func() {
-			k := kafka.Kafka{}
+			k := &kafka.Kafka{
+				Producer: &kafkax.Producer{
+					ClientProducerAPI: &kafkax.MockClientProducer{},
+				},
+			}
 			url, _ := url.Parse("kafka://localhost:9092")
 			err := k.Validate(url)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal("missing topic"))
 		})
 		It("url is good", func() {
-			k := kafka.Kafka{}
+			k := &kafka.Kafka{
+				Producer: &kafkax.Producer{
+					ClientProducerAPI: &kafkax.MockClientProducer{},
+				},
+			}
 			url, _ := url.Parse("kafka://localhost:9092?topic=TEST")
 			err := k.Validate(url)
 			Expect(err).To(Succeed())
@@ -55,21 +67,31 @@ var _ = Describe("Kafka", func() {
 	})
 	Context("Send", func() {
 		It("wrong option", func() {
-			k := kafka.Kafka{}
+			k := &kafka.Kafka{
+				Producer: &kafkax.Producer{
+					ClientProducerAPI: &kafkax.MockClientProducer{},
+				},
+			}
 			url, _ := url.Parse("kafka://user:pass@localhost:9092?topic=TEST&protocol=Unknown")
-			err := k.Validate(url)
-			Expect(err).To(Succeed())
-			err = k.Send(context.Background(), "test", url)
+			err := k.Init(context.Background(), url)
 			Expect(err).NotTo(Succeed())
 		})
 		It("wrong payload", func() {
-			k := &kafka.Kafka{}
+			k := &kafka.Kafka{
+				Producer: &kafkax.Producer{
+					ClientProducerAPI: &kafkax.MockClientProducer{},
+				},
+			}
 			url, _ := url.Parse("kafka://localhost:9092?topic=TEST&messagekey=TEST_KEY&protocol=TCP&mechanisms=PLAIN")
 			err := k.Send(context.Background(), make(chan int), url)
 			Expect(err).NotTo(Succeed())
 		})
 		It("timeout but succeed", func() {
-			k := &kafka.Kafka{}
+			k := &kafka.Kafka{
+				Producer: &kafkax.Producer{
+					ClientProducerAPI: &kafkax.MockClientProducer{},
+				},
+			}
 			url, _ := url.Parse("kafka://localhost:9092?topic=TEST&messagekey=TEST_KEY&protocol=TCP&mechanisms=PLAIN")
 			err := k.Send(context.Background(), "test", url)
 			Expect(err).To(Succeed())

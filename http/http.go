@@ -30,6 +30,10 @@ import (
 	"github.com/w6d-io/x/logx"
 )
 
+func (h *HTTP) Init(ctx context.Context, URL *url.URL) error {
+	return nil
+}
+
 func (h *HTTP) Send(ctx context.Context, payload interface{}, URL *url.URL) error {
 	log := logx.WithName(ctx, "Send").WithValues("URL", URL.Redacted())
 	h.Username = URL.User.Username()

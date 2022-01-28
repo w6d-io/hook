@@ -56,7 +56,7 @@ func DoSend(ctx context.Context, payload interface{}, scope string) error {
 
 	for _, sub := range subscribers {
 		log := log.WithValues("scheme", sub.URL.Scheme)
-		if !isInScope(sub, scope) {
+		if !isInScope(ctx, sub, scope) {
 			log.V(1).Info("skip", "sub", sub.URL.String())
 			continue
 		}
@@ -92,9 +92,9 @@ func AddProvider(name string, i Interface) {
 // }
 
 // Subscribe recorder the suppliers and its scope in subscribers
-func Subscribe(URLRaw, scope string) error {
+func Subscribe(ctx context.Context, URLRaw, scope string) error {
 
-	log := logx.WithName(context.TODO(), "Hook.Subscribe")
+	log := logx.WithName(ctx, "Hook.Subscribe")
 
 	URL, err := url.Parse(URLRaw)
 	if err != nil {
@@ -112,10 +112,17 @@ func Subscribe(URLRaw, scope string) error {
 		log.Error(err, "validation failed")
 		return err
 	}
+
+	if err := s.Init(ctx, URL); err != nil {
+		log.Error(err, "initialization failed")
+		return err
+	}
+
 	w := subscriber{
 		URL:   URL,
 		Scope: scope,
 	}
+
 	subscribers = append(subscribers, w)
 	return nil
 }
@@ -125,9 +132,9 @@ func CleanSubscriber() {
 	subscribers = []subscriber{}
 }
 
-func isInScope(s subscriber, scope string) bool {
+func isInScope(ctx context.Context, s subscriber, scope string) bool {
 
-	log := logx.WithName(context.TODO(), "Hook.isInScope")
+	log := logx.WithName(ctx, "Hook.isInScope")
 
 	prefix := ""
 	if s.Scope == "*" {

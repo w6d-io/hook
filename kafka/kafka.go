@@ -28,28 +28,26 @@ import (
 	"github.com/w6d-io/x/logx"
 )
 
-func (k *Kafka) Send(ctx context.Context, payload interface{}, URL *url.URL) error {
+func (k *Kafka) Init(ctx context.Context, URL *url.URL) error {
 
-	log := logx.WithName(ctx, "Kafka.Send")
+	log := logx.WithName(ctx, "Kafka.Init")
+
+	cfg := &kafkax.Kafka{}
 
 	passwd, ok := URL.User.Password()
 	query := URL.Query()
-	topic := query["topic"][0]
 
-	k.BootstrapServer = URL.Host
-	k.Username = URL.User.Username()
-	k.Password = passwd
+	cfg.BootstrapServer = URL.Host
+	cfg.Username = URL.User.Username()
+	cfg.Password = passwd
 
 	var (
 		async      bool
-		messageKey string
 		protocol   = "SASL_SSL"
 		mechanisms = "PLAIN"
 	)
 	async = len(query["async"]) > 0 && query["async"][0] == "true"
-	if len(query["messagekey"]) > 0 {
-		messageKey = query["messagekey"][0]
-	}
+
 	if len(query["protocol"]) > 0 {
 		protocol = query["protocol"][0]
 	}
@@ -57,7 +55,7 @@ func (k *Kafka) Send(ctx context.Context, payload interface{}, URL *url.URL) err
 		mechanisms = query["mechanisms"][0]
 	}
 
-	p, err := k.NewProducer(
+	p, err := cfg.NewProducer(
 		kafkax.AuthKafka(ok),
 		kafkax.Async(async),
 		kafkax.Protocol(protocol),
@@ -69,6 +67,23 @@ func (k *Kafka) Send(ctx context.Context, payload interface{}, URL *url.URL) err
 		return err
 	}
 
+	k.Producer = p
+
+	return nil
+}
+
+func (k *Kafka) Send(ctx context.Context, payload interface{}, URL *url.URL) error {
+
+	log := logx.WithName(ctx, "Kafka.Send")
+
+	var messageKey string
+	query := URL.Query()
+	topic := query["topic"][0]
+
+	if len(query["messagekey"]) > 0 {
+		messageKey = query["messagekey"][0]
+	}
+
 	message, err := json.Marshal(&payload)
 	if err != nil {
 		log.Error(err, "marshal failed")
@@ -77,7 +92,7 @@ func (k *Kafka) Send(ctx context.Context, payload interface{}, URL *url.URL) err
 
 	if err := retry.Do(
 		func() error {
-			if err := p.SetTopic(topic).Produce(messageKey, message); err != nil {
+			if err := k.Producer.SetTopic(topic).Produce(messageKey, message); err != nil {
 				return err
 			}
 			return nil

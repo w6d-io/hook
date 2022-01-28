@@ -24,8 +24,9 @@ import (
 type Hook struct{}
 
 type Interface interface {
-	Send(context.Context, interface{}, *url.URL) error
 	Validate(*url.URL) error
+	Init(context.Context, *url.URL) error
+	Send(context.Context, interface{}, *url.URL) error
 }
 
 var (

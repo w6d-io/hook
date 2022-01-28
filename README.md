@@ -28,13 +28,13 @@ func main() {
     log := logx.WithName(ctx, "Main")
     URL := "http://localhost:8080/test"
     // add a target for the payload for all scope
-    if err := hook.Subscribe(URL, "test"); err != nil {
+    if err := hook.Subscribe(ctx, URL, "test"); err != nil {
         log.Error(err, "Subscription failed", "target", URL)
         os.Exit(1)
     }
     kafka := "kafka://localhost:9092?topic=TEST&messagekey=msgid"
     // add a target for the payload for all scope
-    if err := hook.Subscribe(kafka, ".*"); err != nil {
+    if err := hook.Subscribe(ctx, kafka, ".*"); err != nil {
         log.Error(err, "Subscription failed", "target", kafka)
         os.Exit(1)
     }
