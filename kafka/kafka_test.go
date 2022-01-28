@@ -66,6 +66,16 @@ var _ = Describe("Kafka", func() {
 		})
 	})
 	Context("Send", func() {
+		It("init success", func() {
+			k := &kafka.Kafka{
+				Producer: &kafkax.Producer{
+					ClientProducerAPI: &kafkax.MockClientProducer{},
+				},
+			}
+			url, _ := url.Parse("kafka://localhost:9092?topic=TEST")
+			err := k.Init(context.Background(), url)
+			Expect(err).To(Succeed())
+		})
 		It("wrong option", func() {
 			k := &kafka.Kafka{
 				Producer: &kafkax.Producer{

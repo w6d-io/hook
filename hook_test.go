@@ -18,7 +18,6 @@ package hook_test
 
 import (
 	"context"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
@@ -50,6 +49,10 @@ var _ = Describe("Hook", func() {
 				err := hook.Subscribe(context.Background(), "https://localhost", "*")
 				Expect(err).ToNot(Succeed())
 				Expect(err.Error()).To(Equal("validate failed"))
+			})
+			It("init failed", func() {
+				err := hook.Subscribe(context.Background(), "kafka://user:pass@localhost:9092?topic=TEST&protocol=Unknown", ".*")
+				Expect(err).NotTo(Succeed())
 			})
 		})
 		Context("send a payload", func() {
