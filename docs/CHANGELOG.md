@@ -1,6 +1,14 @@
 
+<a name="v0.2.1"></a>
+## [v0.2.1](https://gitlab.w6d.io/w6d/projectmgt/-/compare/v0.2.0...v0.2.1) (2022-01-28)
+
+### Chore
+
+* add init function
+
+
 <a name="v0.2.0"></a>
-## [v0.2.0](https://gitlab.w6d.io/w6d/projectmgt/-/compare/v0.1.4...v0.2.0) (2022-01-26)
+## [v0.2.0](https://gitlab.w6d.io/w6d/projectmgt/-/compare/v0.1.4...v0.2.0) (2022-01-27)
 
 ### Chore
 
