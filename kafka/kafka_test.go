@@ -18,6 +18,7 @@ package kafka_test
 
 import (
 	"context"
+	"errors"
 	"net/url"
 
 	. "github.com/onsi/ginkgo"
@@ -82,7 +83,7 @@ var _ = Describe("Kafka", func() {
 					ClientProducerAPI: &kafkax.MockClientProducer{},
 				},
 			}
-			url, _ := url.Parse("kafka://user:pass@localhost:9092?topic=TEST&protocol=Unknown")
+			url, _ := url.Parse("kafka://user:pass@localhost:9092?topic=TEST&mechanisms=PLAIN&protocol=Unknown")
 			err := k.Init(context.Background(), url)
 			Expect(err).NotTo(Succeed())
 		})
@@ -92,7 +93,7 @@ var _ = Describe("Kafka", func() {
 					ClientProducerAPI: &kafkax.MockClientProducer{},
 				},
 			}
-			url, _ := url.Parse("kafka://localhost:9092?topic=TEST&messagekey=TEST_KEY&protocol=TCP&mechanisms=PLAIN")
+			url, _ := url.Parse("kafka://localhost:9092?topic=TEST&messagekey=TEST_KEY")
 			err := k.Send(context.Background(), make(chan int), url)
 			Expect(err).NotTo(Succeed())
 		})
@@ -102,9 +103,21 @@ var _ = Describe("Kafka", func() {
 					ClientProducerAPI: &kafkax.MockClientProducer{},
 				},
 			}
-			url, _ := url.Parse("kafka://localhost:9092?topic=TEST&messagekey=TEST_KEY&protocol=TCP&mechanisms=PLAIN")
+			url, _ := url.Parse("kafka://localhost:9092?topic=TEST&messagekey=TEST_KEY")
 			err := k.Send(context.Background(), "test", url)
 			Expect(err).To(Succeed())
+		})
+		It("error while producing", func() {
+			k := &kafka.Kafka{
+				Producer: &kafkax.Producer{
+					ClientProducerAPI: &kafkax.MockClientProducer{
+						ErrProduce: errors.New("error while producing"),
+					},
+				},
+			}
+			url, _ := url.Parse("kafka://localhost:9092?topic=TEST&messagekey=TEST_KEY")
+			err := k.Send(context.Background(), "test", url)
+			Expect(err).NotTo(Succeed())
 		})
 	})
 })
