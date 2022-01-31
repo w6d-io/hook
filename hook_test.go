@@ -18,7 +18,6 @@ package hook_test
 
 import (
 	"context"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
@@ -32,24 +31,28 @@ var _ = Describe("Hook", func() {
 		})
 		Context("add suppliers", func() {
 			It("succeed for http", func() {
-				err := hook.Subscribe("http://localhost:8080", "*")
+				err := hook.Subscribe(context.Background(), "http://localhost:8080", "*")
 				Expect(err).To(Succeed())
 			})
 			It("does not support this provider", func() {
-				err := hook.Subscribe("mongodb://login:password@localhost:27017", "end")
+				err := hook.Subscribe(context.Background(), "mongodb://login:password@localhost:27017", "end")
 				Expect(err).ToNot(Succeed())
 				Expect(err.Error()).To(ContainSubstring("not supported"))
 			})
 			It("URL is malformed", func() {
-				err := hook.Subscribe("test://{}", "begin")
+				err := hook.Subscribe(context.Background(), "test://{}", "begin")
 				Expect(err).ToNot(Succeed())
 				Expect(err.Error()).To(ContainSubstring("invalid character"))
 			})
 			It("validation failed", func() {
 				hook.AddProvider("https", &TestValidateFail{})
-				err := hook.Subscribe("https://localhost", "*")
+				err := hook.Subscribe(context.Background(), "https://localhost", "*")
 				Expect(err).ToNot(Succeed())
 				Expect(err.Error()).To(Equal("validate failed"))
+			})
+			It("init failed", func() {
+				err := hook.Subscribe(context.Background(), "kafka://user:pass@localhost:9092?topic=TEST&protocol=Unknown", ".*")
+				Expect(err).NotTo(Succeed())
 			})
 		})
 		Context("send a payload", func() {
@@ -71,13 +74,13 @@ var _ = Describe("Hook", func() {
 				Expect(err).To(Succeed())
 			})
 			It("with bad scope", func() {
-				err := hook.Subscribe("http://localhost", "begin")
+				err := hook.Subscribe(context.Background(), "http://localhost", "begin")
 				Expect(err).To(Succeed())
 				err = hook.Send(context.Background(), "message", "test")
 				Expect(err).To(Succeed())
 			})
 			It("regex failed", func() {
-				err := hook.Subscribe("http://localhost", "[")
+				err := hook.Subscribe(context.Background(), "http://localhost", "[")
 				Expect(err).To(Succeed())
 				err = hook.DoSend(context.Background(), "message", "test")
 				Expect(err).ToNot(Succeed())

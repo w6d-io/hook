@@ -21,5 +21,5 @@ import (
 )
 
 type Kafka struct {
-	kafkax.Kafka
+	Producer kafkax.ProducerAPI
 }

@@ -68,11 +68,13 @@ var _ = AfterSuite(func() {
 
 type TestAllOk struct{}
 
-func (t *TestAllOk) Send(_ context.Context, _ interface{}, _ *url.URL) error { return nil }
+func (t *TestAllOk) Init(_ context.Context, _ *url.URL) error                { return nil }
 func (t *TestAllOk) Validate(_ *url.URL) error                               { return nil }
+func (t *TestAllOk) Send(_ context.Context, _ interface{}, _ *url.URL) error { return nil }
 
 type TestSendFail struct{}
 
+func (t *TestSendFail) Init(_ context.Context, _ *url.URL) error { return nil }
 func (t *TestSendFail) Send(_ context.Context, _ interface{}, _ *url.URL) error {
 	return errors.New("send failed")
 }
@@ -80,5 +82,6 @@ func (t *TestSendFail) Validate(_ *url.URL) error { return nil }
 
 type TestValidateFail struct{}
 
-func (t *TestValidateFail) Send(_ context.Context, _ interface{}, _ *url.URL) error { return nil }
+func (t *TestValidateFail) Init(_ context.Context, _ *url.URL) error                { return nil }
 func (t *TestValidateFail) Validate(_ *url.URL) error                               { return errors.New("validate failed") }
+func (t *TestValidateFail) Send(_ context.Context, _ interface{}, _ *url.URL) error { return nil }

@@ -40,6 +40,12 @@ var _ = Describe("HTTP", func() {
 		})
 	})
 	Context("Send", func() {
+		It("init success", func() {
+			h := http.HTTP{}
+			url, _ := url.Parse("http://localhost:1234")
+			err := h.Init(context.Background(), url)
+			Expect(err).To(Succeed())
+		})
 		It("all attempts failed", func() {
 			h := http.HTTP{}
 			URL, err := url.Parse("http://localhost:1234")
