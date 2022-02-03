@@ -18,6 +18,8 @@ package hook_test
 
 import (
 	"context"
+	"net/url"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
@@ -53,6 +55,44 @@ var _ = Describe("Hook", func() {
 			It("init failed", func() {
 				err := hook.Subscribe(context.Background(), "kafka://user:pass@localhost:9092?topic=TEST&protocol=Unknown", ".*")
 				Expect(err).NotTo(Succeed())
+			})
+		})
+		Context("resolve url", func() {
+			It("error template pattern", func() {
+				URL := &url.URL{
+					RawQuery: "127.0.0.1/{{unknown .}}",
+				}
+				payload := map[string]interface{}{
+					"id": "12345",
+				}
+				URL = hook.ResolveUrl(payload, URL)
+				Expect(URL.RawQuery).To(Equal("127.0.0.1/{{unknown .}}"))
+			})
+			It("error marshalling payload", func() {
+				URL := &url.URL{
+					RawQuery: "127.0.0.1/process?id={{.id}}",
+				}
+				payload := make(chan int)
+				URL = hook.ResolveUrl(payload, URL)
+				Expect(URL.RawQuery).To(Equal("127.0.0.1/process?id={{.id}}"))
+			})
+			It("error unmarshalling payload", func() {
+				URL := &url.URL{
+					RawQuery: "127.0.0.1/process?id={{.id}}",
+				}
+				payload := `hello`
+				URL = hook.ResolveUrl(payload, URL)
+				Expect(URL.RawQuery).To(Equal("127.0.0.1/process?id={{.id}}"))
+			})
+			It("template is correct", func() {
+				URL := &url.URL{
+					RawQuery: "127.0.0.1/process?id={{.id}}",
+				}
+				payload := map[string]interface{}{
+					"id": "12345",
+				}
+				URL = hook.ResolveUrl(payload, URL)
+				Expect(URL.RawQuery).To(Equal("127.0.0.1/process?id=12345"))
 			})
 		})
 		Context("send a payload", func() {

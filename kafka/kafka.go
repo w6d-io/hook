@@ -84,7 +84,7 @@ func (k *Kafka) Send(ctx context.Context, payload interface{}, URL *url.URL) err
 		messageKey = query["messagekey"][0]
 	}
 
-	message, err := json.Marshal(&payload)
+	message, err := json.Marshal(payload)
 	if err != nil {
 		log.Error(err, "marshal failed")
 		return err

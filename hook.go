@@ -18,10 +18,13 @@ Created on 07/02/2021
 package hook
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"regexp"
+	"text/template"
 
 	"github.com/w6d-io/hook/http"
 	"github.com/w6d-io/hook/kafka"
@@ -64,7 +67,7 @@ func DoSend(ctx context.Context, payload interface{}, scope string) error {
 			f := suppliers[URL.Scheme]
 			logg := log.WithValues("url", URL)
 			select {
-			case errc <- f.Send(ctx, payload, URL):
+			case errc <- f.Send(ctx, payload, ResolveUrl(payload, URL)):
 				logg.Info("sent")
 			case <-quit:
 				logg.Info("quit")
@@ -146,4 +149,33 @@ func isInScope(ctx context.Context, s subscriber, scope string) bool {
 		return false
 	}
 	return r.MatchString(scope)
+}
+
+// ResolveUrl resolve url template from payload content
+func ResolveUrl(payload interface{}, URL *url.URL) *url.URL {
+	var tpl bytes.Buffer
+
+	urlCopy, _ := url.Parse(URL.String())
+
+	t, err := template.New("").Parse(urlCopy.RawQuery)
+	if err != nil {
+		return urlCopy
+	}
+
+	bin, err := json.Marshal(payload)
+	if err != nil {
+		return urlCopy
+	}
+
+	var payloadAsMap map[string]interface{}
+	err = json.Unmarshal(bin, &payloadAsMap)
+	if err != nil {
+		return urlCopy
+	}
+
+	_ = t.Execute(&tpl, payloadAsMap)
+
+	urlCopy.RawQuery = tpl.String()
+
+	return urlCopy
 }
