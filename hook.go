@@ -151,7 +151,7 @@ func isInScope(ctx context.Context, s subscriber, scope string) bool {
 	return r.MatchString(scope)
 }
 
-// ResolveUrl resolve url template from payload content
+// ResolveUrl template from payload content
 func ResolveUrl(payload interface{}, URL *url.URL) *url.URL {
 	var tpl bytes.Buffer
 
@@ -162,13 +162,13 @@ func ResolveUrl(payload interface{}, URL *url.URL) *url.URL {
 		return urlCopy
 	}
 
-	bin, err := json.Marshal(payload)
+	payloadAsBin, err := json.Marshal(payload)
 	if err != nil {
 		return urlCopy
 	}
 
 	var payloadAsMap map[string]interface{}
-	err = json.Unmarshal(bin, &payloadAsMap)
+	err = json.Unmarshal(payloadAsBin, &payloadAsMap)
 	if err != nil {
 		return urlCopy
 	}
