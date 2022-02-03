@@ -1,10 +1,14 @@
 
-<a name="v0.2.1"></a>
-## [v0.2.1](https://gitlab.w6d.io/w6d/projectmgt/-/compare/v0.2.0...v0.2.1) (2022-01-28)
+<a name="0.2.2"></a>
+## [0.2.2](https://gitlab.w6d.io/w6d/projectmgt/-/compare/v0.2.1...0.2.2) (2022-02-03)
 
 ### Chore
 
-* add init function
+* add template resolver capability inside url
+
+
+<a name="v0.2.1"></a>
+## [v0.2.1](https://gitlab.w6d.io/w6d/projectmgt/-/compare/v0.2.0...v0.2.1) (2022-01-31)
 
 
 <a name="v0.2.0"></a>
