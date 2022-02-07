@@ -40,7 +40,7 @@ bin/goimports: ## Download goimports locally if necessary
 
 GITCHGLOG = $(shell pwd)/bin/git-chglog
 bin/git-chglog: ## Download git-chglog locally if necessary
-	$(call go-get-toll,$(GITCHGLOG),github.com/git-chglog/git-chglog/cmd/git-chglog@latest)
+	$(call go-get-tool,$(GITCHGLOG),github.com/git-chglog/git-chglog/cmd/git-chglog@latest)
 
 # Formats the code
 .PHONY: format

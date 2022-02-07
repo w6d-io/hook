@@ -18,6 +18,8 @@ package hook_test
 
 import (
 	"context"
+	"net/url"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
@@ -55,6 +57,37 @@ var _ = Describe("Hook", func() {
 				Expect(err).NotTo(Succeed())
 			})
 		})
+		Context("resolve url", func() {
+			It("error template pattern", func() {
+				URL, _ := url.Parse("http://127.0.0.1/process?id={{unknown .id}}")
+				payload := map[string]interface{}{
+					"id": "12345",
+				}
+				_, err := hook.ResolveUrl(context.Background(), payload, URL)
+				Expect(err).NotTo(Succeed())
+			})
+			It("error marshalling payload", func() {
+				URL, _ := url.Parse("http://127.0.0.1/process?id={{.id}}")
+				payload := make(chan int)
+				_, err := hook.ResolveUrl(context.Background(), payload, URL)
+				Expect(err).NotTo(Succeed())
+			})
+			It("error unmarshalling payload", func() {
+				URL, _ := url.Parse("http://127.0.0.1/process?id={{.id}}")
+				payload := `hello`
+				_, err := hook.ResolveUrl(context.Background(), payload, URL)
+				Expect(err).NotTo(Succeed())
+			})
+			It("template is correct", func() {
+				URL, _ := url.Parse("http://127.0.0.1/process?id={{.id}}")
+				payload := map[string]interface{}{
+					"id": "12345",
+				}
+				resolvedUrl, err := hook.ResolveUrl(context.Background(), payload, URL)
+				Expect(err).To(Succeed())
+				Expect(resolvedUrl.String()).To(Equal("http://127.0.0.1/process?id=12345"))
+			})
+		})
 		Context("send a payload", func() {
 			It("succeed to send", func() {
 				Expect(hook.Send(context.Background(), "message", "*")).To(Succeed())
@@ -66,6 +99,7 @@ var _ = Describe("Hook", func() {
 	})
 	When("provider Failed", func() {
 		BeforeEach(func() {
+			hook.CleanSubscriber()
 			hook.AddProvider("http", &TestSendFail{})
 		})
 		Context("send payload", func() {
@@ -83,13 +117,18 @@ var _ = Describe("Hook", func() {
 				err := hook.Subscribe(context.Background(), "http://localhost", "[")
 				Expect(err).To(Succeed())
 				err = hook.DoSend(context.Background(), "message", "test")
-				Expect(err).ToNot(Succeed())
-				Expect(err.Error()).To(Equal("send failed"))
+				Expect(err).To(Succeed())
 			})
 			It("with DoSend", func() {
 				err := hook.DoSend(context.Background(), "message", "*")
+				Expect(err).To(Succeed())
+			})
+			It("error during payload resolution", func() {
+				err := hook.Subscribe(context.Background(), "http://localhost/process?id={{.id}}", ".*")
+				Expect(err).To(Succeed())
+				err = hook.DoSend(context.Background(), "message", "test")
 				Expect(err).ToNot(Succeed())
-				Expect(err.Error()).To(Equal("send failed"))
+				Expect(err.Error()).To(ContainSubstring("template:"))
 			})
 			It("skip", func() {
 

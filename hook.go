@@ -18,10 +18,13 @@ Created on 07/02/2021
 package hook
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"regexp"
+	"text/template"
 
 	"github.com/w6d-io/hook/http"
 	"github.com/w6d-io/hook/kafka"
@@ -55,21 +58,27 @@ func DoSend(ctx context.Context, payload interface{}, scope string) error {
 	defer close(quit)
 
 	for _, sub := range subscribers {
-		log := log.WithValues("scheme", sub.URL.Scheme)
-		if !isInScope(ctx, sub, scope) {
-			log.V(1).Info("skip", "sub", sub.URL.String())
-			continue
-		}
-		go func(payload interface{}, URL *url.URL) {
-			f := suppliers[URL.Scheme]
-			logg := log.WithValues("url", URL)
-			select {
-			case errc <- f.Send(ctx, payload, URL):
-				logg.Info("sent")
-			case <-quit:
-				logg.Info("quit")
+		go func(payload interface{}, subScope string, subURL *url.URL) {
+			logg := log.WithValues("url", subURL)
+			if !isInScope(ctx, subScope, scope) {
+				log.V(1).Info("skip", "sub", subURL.String())
+				errc <- nil
+			} else {
+				f := suppliers[subURL.Scheme]
+				resolvedUrl, err := ResolveUrl(ctx, payload, subURL)
+				if err != nil {
+					logg.Error(err, "error while resolving url")
+					errc <- err
+				} else {
+					select {
+					case errc <- f.Send(ctx, payload, resolvedUrl):
+						logg.Info("sent")
+					case <-quit:
+						logg.Info("quit")
+					}
+				}
 			}
-		}(payload, sub.URL)
+		}(payload, sub.Scope, sub.URL)
 	}
 	for range subscribers {
 		if err := <-errc; err != nil {
@@ -132,18 +141,49 @@ func CleanSubscriber() {
 	subscribers = []subscriber{}
 }
 
-func isInScope(ctx context.Context, s subscriber, scope string) bool {
+func isInScope(ctx context.Context, subScope, scope string) bool {
 
 	log := logx.WithName(ctx, "Hook.isInScope")
 
 	prefix := ""
-	if s.Scope == "*" {
+	if subScope == "*" {
 		prefix = "."
 	}
-	r, err := regexp.Compile(prefix + s.Scope)
+	r, err := regexp.Compile(prefix + subScope)
 	if err != nil {
 		log.Error(err, "Match failed")
 		return false
 	}
 	return r.MatchString(scope)
+}
+
+// ResolveUrl from payload content
+func ResolveUrl(ctx context.Context, payload interface{}, URL *url.URL) (*url.URL, error) {
+
+	log := logx.WithName(ctx, "Hook.ResolveUrl")
+
+	payloadAsBin, err := json.Marshal(payload)
+	if err != nil {
+		log.Error(err, "marshal failed")
+		return nil, err
+	}
+	var payloadAsInterface interface{}
+	_ = json.Unmarshal(payloadAsBin, &payloadAsInterface)
+
+	t, err := template.New("").Option("missingkey=error").Parse(URL.String())
+	if err != nil {
+		log.Error(err, "template parse failed")
+		return nil, err
+	}
+
+	var tpl bytes.Buffer
+	err = t.Execute(&tpl, payloadAsInterface)
+	if err != nil {
+		log.Error(err, "template execute failed")
+		return nil, err
+	}
+
+	urlCopy, _ := url.Parse(tpl.String())
+
+	return urlCopy, nil
 }
