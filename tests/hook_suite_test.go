@@ -1,5 +1,3 @@
-//go:build !integration
-
 /*
 Copyright 2020 WILDCARD
 
@@ -17,12 +15,16 @@ limitations under the License.
 Created on 08/02/2021
 */
 
-package hook_test
+package test
 
 import (
 	"context"
-	"errors"
-	"net/url"
+	"fmt"
+	"github.com/google/uuid"
+	"github.com/w6d-io/x/logx"
+	"os"
+	"os/exec"
+	"regexp"
 	"testing"
 
 	"github.com/w6d-io/hook"
@@ -42,7 +44,17 @@ func Test(t *testing.T) {
 	RunSpecs(t, " Suite")
 }
 
+var (
+	rpkPath   = rpkPathFinder()
+	rpkPort   string
+	ctx       context.Context
+	kafkaHost string
+)
 var _ = BeforeSuite(func() {
+	correlationID := uuid.New().String()
+	ctx = context.Background()
+	ctx = context.WithValue(ctx, logx.CorrelationID, correlationID)
+
 	encoder := zapcore.EncoderConfig{
 		// Keys can be anything except the empty string.
 		TimeKey:        "T",
@@ -63,28 +75,45 @@ var _ = BeforeSuite(func() {
 		StacktraceLevel: zapcore.PanicLevel,
 	}
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts), zap.RawZapOpts(zapraw.AddCaller())))
+	Expect(rpkPath).ToNot(BeEmpty())
+	By(rpkPath)
+
+	By("start redpanda")
+	ps := exec.Command(rpkPath, "container", "start")
+	ps.Stderr = os.Stderr
+	out, err := ps.Output()
+	Expect(err).ToNot(HaveOccurred())
+	logx.WithName(ctx, "before_suite").Info("start RedPanda cluster", "out", out)
+
+	By("get redpanda port")
+	re := regexp.MustCompile(`.*127\.0\.0\.1:(\d+).*`)
+	match := re.FindStringSubmatch(string(out))
+	Expect(len(match)).To(Equal(2))
+	rpkPort = match[1]
+	kafkaHost = fmt.Sprintf("localhost:%s", rpkPort)
+
+	By("set cluster config")
+	ps = exec.Command("docker", "exec", "rp-node-0", "rpk", "cluster", "config", "set", "auto_create_topics_enabled", `true`)
+	//ps = exec.Command(rpkPath, "cluster", "config", "set", "auto_create_topics_enabled", "true", "--brokers", kafkaHost)
+	ps.Stderr = os.Stderr
+	out, err = ps.Output()
+	logx.WithName(ctx, "before_suite").Info("set RedPanda cluster config", "out", out)
+	Expect(err).ToNot(HaveOccurred())
 })
 
 var _ = AfterSuite(func() {
+	if rpkPath != "" {
+		ps := exec.Command(rpkPath, "container", "purge")
+		ps.Stdout = os.Stdout
+		ps.Stderr = os.Stderr
+		Expect(ps.Start()).To(Succeed())
+	}
 	hook.CleanSubscriber()
 })
 
-type TestAllOk struct{}
-
-func (t *TestAllOk) Init(_ context.Context, _ *url.URL) error                { return nil }
-func (t *TestAllOk) Validate(_ *url.URL) error                               { return nil }
-func (t *TestAllOk) Send(_ context.Context, _ interface{}, _ *url.URL) error { return nil }
-
-type TestSendFail struct{}
-
-func (t *TestSendFail) Init(_ context.Context, _ *url.URL) error { return nil }
-func (t *TestSendFail) Send(_ context.Context, _ interface{}, _ *url.URL) error {
-	return errors.New("send failed")
+func rpkPathFinder() string {
+	if val, ok := os.LookupEnv("RPK"); ok {
+		return val
+	}
+	return ""
 }
-func (t *TestSendFail) Validate(_ *url.URL) error { return nil }
-
-type TestValidateFail struct{}
-
-func (t *TestValidateFail) Init(_ context.Context, _ *url.URL) error                { return nil }
-func (t *TestValidateFail) Validate(_ *url.URL) error                               { return errors.New("validate failed") }
-func (t *TestValidateFail) Send(_ context.Context, _ interface{}, _ *url.URL) error { return nil }

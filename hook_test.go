@@ -1,3 +1,5 @@
+//go:build !integration
+
 /*
 Copyright 2020 WILDCARD
 
@@ -5,7 +7,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,13 +16,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 Created on 25/02/2021
 */
+
 package hook_test
 
 import (
 	"context"
 	"net/url"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
 	"github.com/w6d-io/hook"
@@ -96,6 +99,22 @@ var _ = Describe("Hook", func() {
 				Expect(hook.DoSend(context.Background(), "message", "*")).To(Succeed())
 			})
 		})
+		Context("parse multi host in url", func() {
+			It("splits a multi host url", func() {
+				url := "kafka://rpk-0.rpk.kafka.svc.cluster.local:9092,rpk-1.rpk.kafka.svc.cluster.local:9092,rpk-2.rpk.kafka.svc.cluster.local:9092/?topic=PIPELINE_EVENTS&group_id=cicd"
+				urls := hook.ParseMultiHostURL(url)
+				Expect(len(urls)).To(Equal(3))
+				Expect(urls[0]).To(Equal("kafka://rpk-0.rpk.kafka.svc.cluster.local:9092/?topic=PIPELINE_EVENTS&group_id=cicd"))
+				Expect(urls[1]).To(Equal("kafka://rpk-1.rpk.kafka.svc.cluster.local:9092/?topic=PIPELINE_EVENTS&group_id=cicd"))
+				Expect(urls[2]).To(Equal("kafka://rpk-2.rpk.kafka.svc.cluster.local:9092/?topic=PIPELINE_EVENTS&group_id=cicd"))
+			})
+			It("splits a one host url", func() {
+				url := "kafka://rpk-0.rpk.kafka.svc.cluster.local:9092/?topic=PIPELINE_EVENTS&group_id=cicd"
+				urls := hook.ParseMultiHostURL(url)
+				Expect(len(urls)).To(Equal(1))
+				Expect(urls[0]).To(Equal("kafka://rpk-0.rpk.kafka.svc.cluster.local:9092/?topic=PIPELINE_EVENTS&group_id=cicd"))
+			})
+		})
 	})
 	When("provider Failed", func() {
 		BeforeEach(func() {
@@ -132,6 +151,14 @@ var _ = Describe("Hook", func() {
 			})
 			It("skip", func() {
 
+			})
+		})
+		Context("parse the multi host url return nil", func() {
+			It("fails on schema", func() {
+				Expect(hook.ParseMultiHostURL("http:/localhost")).To(BeNil())
+			})
+			It("fails on end trailing missing", func() {
+				Expect(hook.ParseMultiHostURL("http://localhost?key=fail")).To(BeNil())
 			})
 		})
 	})
