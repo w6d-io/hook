@@ -99,6 +99,22 @@ var _ = Describe("Hook", func() {
 				Expect(hook.DoSend(context.Background(), "message", "*")).To(Succeed())
 			})
 		})
+		Context("parse multi host in url", func() {
+			It("splits a multi host url", func() {
+				url := "kafka://rpk-0.rpk.kafka.svc.cluster.local:9092,rpk-1.rpk.kafka.svc.cluster.local:9092,rpk-2.rpk.kafka.svc.cluster.local:9092/?topic=PIPELINE_EVENTS&group_id=cicd"
+				urls := hook.ParseMultiHostURL(url)
+				Expect(len(urls)).To(Equal(3))
+				Expect(urls[0]).To(Equal("kafka://rpk-0.rpk.kafka.svc.cluster.local:9092/?topic=PIPELINE_EVENTS&group_id=cicd"))
+				Expect(urls[1]).To(Equal("kafka://rpk-1.rpk.kafka.svc.cluster.local:9092/?topic=PIPELINE_EVENTS&group_id=cicd"))
+				Expect(urls[2]).To(Equal("kafka://rpk-2.rpk.kafka.svc.cluster.local:9092/?topic=PIPELINE_EVENTS&group_id=cicd"))
+			})
+			It("splits a one host url", func() {
+				url := "kafka://rpk-0.rpk.kafka.svc.cluster.local:9092/?topic=PIPELINE_EVENTS&group_id=cicd"
+				urls := hook.ParseMultiHostURL(url)
+				Expect(len(urls)).To(Equal(1))
+				Expect(urls[0]).To(Equal("kafka://rpk-0.rpk.kafka.svc.cluster.local:9092/?topic=PIPELINE_EVENTS&group_id=cicd"))
+			})
+		})
 	})
 	When("provider Failed", func() {
 		BeforeEach(func() {
@@ -135,6 +151,14 @@ var _ = Describe("Hook", func() {
 			})
 			It("skip", func() {
 
+			})
+		})
+		Context("parse the multi host url return nil", func() {
+			It("fails on schema", func() {
+				Expect(hook.ParseMultiHostURL("http:/localhost")).To(BeNil())
+			})
+			It("fails on end trailing missing", func() {
+				Expect(hook.ParseMultiHostURL("http://localhost?key=fail")).To(BeNil())
 			})
 		})
 	})

@@ -18,78 +18,78 @@ Created on 26/02/2021
 package http
 
 import (
-    "bytes"
-    "context"
-    "encoding/json"
-    "io/ioutil"
-    "net/http"
-    "net/url"
-    "strconv"
-    "time"
+	"bytes"
+	"context"
+	"encoding/json"
+	"io/ioutil"
+	"net/http"
+	"net/url"
+	"strconv"
+	"time"
 
-    "github.com/avast/retry-go"
+	"github.com/avast/retry-go"
 
-    "github.com/w6d-io/x/logx"
+	"github.com/w6d-io/x/logx"
 )
 
 func (h *HTTP) Init(ctx context.Context, URL *url.URL) error {
-    return nil
+	return nil
 }
 
 func (h *HTTP) Send(ctx context.Context, payload interface{}, URL *url.URL) error {
-    log := logx.WithName(ctx, "Send").WithValues("URL", URL.Redacted())
-    h.Username = URL.User.Username()
-    h.Password, _ = URL.User.Password()
-    query := URL.Query()
-    to, ok := query["timeout"]
-    client := http.Client{
-        Timeout: 5 * time.Second,
-    }
-    if ok {
-        n, err := strconv.ParseInt(to[0], 10, 64)
-        if err != nil {
-            log.Error(err, "convert timeout failed")
-            return err
-        }
-        client = http.Client{
-            Timeout: time.Duration(n) * time.Second,
-        }
-    }
-    log.V(1).Info("marshal payload")
-    data, err := json.Marshal(payload)
-    if err != nil {
-        log.Error(err, "marshal failed")
-        return err
-    }
-    if err := retry.Do(
-        func() error {
-            log.V(1).Info("post payload", "attempt", retry.DefaultAttempts)
-            response, err := client.Post(URL.String(), "application/json", bytes.NewBuffer(data))
-            if err == nil {
-                defer func() {
-                    if err := response.Body.Close(); err != nil {
-                        log.Error(err, "close http response")
-                        return
-                    }
-                }()
-                body, err := ioutil.ReadAll(response.Body)
-                if err != nil {
-                    log.Error(err, "get response body")
-                }
-                log.Info(string(body))
-                return nil
-            }
-            log.Error(err, "post data failed")
-            return err
-        },
-        retry.Attempts(5),
-    ); err != nil {
-        return err
-    }
+	log := logx.WithName(ctx, "Send").WithValues("URL", URL.Redacted())
+	h.Username = URL.User.Username()
+	h.Password, _ = URL.User.Password()
+	query := URL.Query()
+	to, ok := query["timeout"]
+	client := http.Client{
+		Timeout: 5 * time.Second,
+	}
+	if ok {
+		n, err := strconv.ParseInt(to[0], 10, 64)
+		if err != nil {
+			log.Error(err, "convert timeout failed")
+			return err
+		}
+		client = http.Client{
+			Timeout: time.Duration(n) * time.Second,
+		}
+	}
+	log.V(1).Info("marshal payload")
+	data, err := json.Marshal(payload)
+	if err != nil {
+		log.Error(err, "marshal failed")
+		return err
+	}
+	if err := retry.Do(
+		func() error {
+			log.V(1).Info("post payload", "attempt", retry.DefaultAttempts)
+			response, err := client.Post(URL.String(), "application/json", bytes.NewBuffer(data))
+			if err == nil {
+				defer func() {
+					if err := response.Body.Close(); err != nil {
+						log.Error(err, "close http response")
+						return
+					}
+				}()
+				body, err := ioutil.ReadAll(response.Body)
+				if err != nil {
+					log.Error(err, "get response body")
+				}
+				log.Info(string(body))
+				return nil
+			}
+			log.Error(err, "post data failed")
+			return err
+		},
+		retry.Attempts(5),
+	); err != nil {
+		return err
+	}
 
-    return nil
+	return nil
 }
 
 func (HTTP) Validate(_ *url.URL) error {
-    return nil
+	return nil
 }

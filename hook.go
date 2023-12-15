@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"net/url"
 	"regexp"
+	"strings"
 	"text/template"
 
 	"github.com/w6d-io/hook/http"
@@ -186,4 +187,55 @@ func ResolveUrl(ctx context.Context, payload interface{}, URL *url.URL) (*url.UR
 	urlCopy, _ := url.Parse(tpl.String())
 
 	return urlCopy, nil
+}
+
+// ParseMultiHostURL returns a slice of URL split by host
+//
+// Example:
+//
+//	exampleURL := "kafka://rpk-0.rpk.kafka.svc.cluster.local:9092,rpk-1.rpk.kafka.svc.cluster.local:9092,rpk-2.rpk.kafka.svc.cluster.local:9092/?topic=PIPELINE_EVENTS&groupid=cicd"
+//	parsedURLs := parseMultiHostURL(exampleURL)
+//	for _, url := range parsedURLs {
+//		fmt.Println(url)
+//	}
+//
+// Output:
+//
+//	kafka://rpk-0.rpk.kafka.svc.cluster.local:9092/?topic=PIPELINE_EVENTS&groupid=cicd
+//	kafka://rpk-1.rpk.kafka.svc.cluster.local:9092/?topic=PIPELINE_EVENTS&groupid=cicd
+//	kafka://rpk-2.rpk.kafka.svc.cluster.local:9092/?topic=PIPELINE_EVENTS&groupid=cicd
+//
+// Warning:
+//
+//	the latest trailing `/` at the end of the host[s] is mandatory for that function works properly
+//
+// param: url
+// return: []url
+func ParseMultiHostURL(url string) []string {
+	// Identify the scheme
+	schemeEnd := strings.Index(url, "//")
+	if schemeEnd == -1 {
+		return nil // No scheme found, invalid URL
+	}
+
+	// Extract everything after the scheme
+	afterScheme := url[schemeEnd+2:]
+
+	// Split the remaining part into hosts and path
+	parts := strings.SplitN(afterScheme, "/", 2)
+	if len(parts) < 2 {
+		return nil
+	}
+	hostsPart := parts[0]
+	rest := "/" + parts[1]
+
+	// Split the hosts part by the comma
+	hosts := strings.Split(hostsPart, ",")
+
+	// Reconstruct individual URLs
+	var urls []string
+	for _, host := range hosts {
+		urls = append(urls, url[:schemeEnd+2]+host+rest)
+	}
+	return urls
 }

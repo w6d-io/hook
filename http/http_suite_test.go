@@ -20,13 +20,13 @@ Created on 26/02/2021
 package http_test
 
 import (
-    "testing"
+	"testing"
 
-    . "github.com/onsi/ginkgo/v2"
-    . "github.com/onsi/gomega"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
 func TestHTTP(t *testing.T) {
-    RegisterFailHandler(Fail)
-    RunSpecs(t, "HTTP_Send Suite")
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "HTTP_Send Suite")
 }

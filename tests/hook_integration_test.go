@@ -20,47 +20,47 @@ Created on 19/11/2022
 package test
 
 import (
-    "fmt"
-    "github.com/w6d-io/x/logx"
-    "os/exec"
+	"fmt"
+	"github.com/w6d-io/x/logx"
+	"os/exec"
 
-    . "github.com/onsi/ginkgo/v2"
-    . "github.com/onsi/gomega"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 
-    "github.com/w6d-io/hook"
+	"github.com/w6d-io/hook"
 )
 
 var _ = Describe("", func() {
-    Context("Test hook with RedPanda", func() {
-        var payload = struct {
-            Data string
-        }{
-            Data: "test",
-        }
-        var topic = "int-test"
-        BeforeEach(func() {
-        })
-        AfterEach(func() {
-        })
-        It("produces successfully", func() {
-            By("init kafka subscription", func() {
-                Expect(hook.Subscribe(ctx, fmt.Sprintf("kafka://%s?topic=%s&protocol=SASL_SSL&mechanisms=PLAIN&messagekey=test", kafkaHost, topic), "*")).To(Succeed())
-            })
+	Context("Test hook with RedPanda", func() {
+		var payload = struct {
+			Data string
+		}{
+			Data: "test",
+		}
+		var topic = "int-test"
+		BeforeEach(func() {
+		})
+		AfterEach(func() {
+		})
+		It("produces successfully", func() {
+			By("init kafka subscription", func() {
+				Expect(hook.Subscribe(ctx, fmt.Sprintf("kafka://%s?topic=%s&protocol=SASL_SSL&mechanisms=PLAIN&messagekey=test", kafkaHost, topic), "*")).To(Succeed())
+			})
 
-            By("Send payload")
-            err := hook.Send(ctx, &payload, "send succeed")
-            Expect(err).ToNot(HaveOccurred())
-            By("consume the message", func() {
-                ps := exec.Command(rpkPath, "topic", "consume", topic, "--num", "1", "--brokers", kafkaHost)
-                out, err := ps.Output()
-                Expect(err).ToNot(HaveOccurred())
-                logx.WithName(ctx, "int-test").Info("test", "out", out)
-            })
+			By("Send payload")
+			err := hook.Send(ctx, &payload, "send succeed")
+			Expect(err).ToNot(HaveOccurred())
+			By("consume the message", func() {
+				ps := exec.Command(rpkPath, "topic", "consume", topic, "--num", "1", "--brokers", kafkaHost)
+				out, err := ps.Output()
+				Expect(err).ToNot(HaveOccurred())
+				logx.WithName(ctx, "int-test").Info("test", "out", out)
+			})
 
-        })
-        It("misses the topic", func() {
-            Expect(hook.Subscribe(ctx, fmt.Sprintf("kafka://%s", kafkaHost), "*")).ToNot(Succeed())
-        })
+		})
+		It("misses the topic", func() {
+			Expect(hook.Subscribe(ctx, fmt.Sprintf("kafka://%s", kafkaHost), "*")).ToNot(Succeed())
+		})
 
-    })
+	})
 })
