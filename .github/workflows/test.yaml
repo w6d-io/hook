@@ -17,11 +17,10 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
-        go-version: 1.20
-
-    - name: Get dependency
-      run: go mod tidy
-
+        go-version: '1.20.3'
+    - name: Install dependencies
+      run: |
+        go get ./...
     - name: Test
       run: go test -v -coverprofile=coverage.txt -covermode=atomic ./...
 
